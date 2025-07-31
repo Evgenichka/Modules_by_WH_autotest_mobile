@@ -1,0 +1,84 @@
+stages:
+  - build
+  - test
+  - deploy
+
+# Этап сборки
+build:
+  stage: build
+  script:
+    - echo "Выполняем сборку проекта"
+    - mvn clean install
+  artifacts:
+    paths:
+      - target/
+
+# Этап запуска тестов
+test:
+  stage: test
+  script:
+    - echo "Запускаем тесты на BrowserStack"
+    - mvn test -Dbrowserstack.user=eva -Dbrowserstack.key=your_access_key
+  artifacts:
+    paths:
+      - target/allure-results/
+
+# Этап генерации Allure-репорта
+generate_report:
+  stage: test
+  script:
+    - echo "Генерируем Allure-репорт"
+    - allure generate target/allure-results -o target/allure-report
+  artifacts:
+    paths:
+      - target/allure-report/
+
+# Этап деплоя
+deploy:
+  stage: deploy
+  script:
+    - echo "Выполняем деплой"
+    - ssh user@your_server "cd C:/app && git pull origin master && mvn clean install"
+  when: manual
+  only:
+    - master
+
+# CI для фича-веток и мастера
+ci_feature_branch:
+  stage: build
+  only:
+    - branches
+  script:
+    - echo "CI для фича-веток"
+    - mvn clean install
+    - mvn test -Dbrowserstack.user=eva -Dbrowserstack.key=your_access_key
+
+ci_master:
+  stage: build
+  only:
+    - master
+  script:
+    - echo "CI для мастера"
+    - mvn clean install
+    - mvn test -Dbrowserstack.eva=192.168.1.102 -Dbrowserstack.key=your_access_key
+
+# CD для мастера с мануальным деплоем
+cd_master:
+  stage: deploy
+  only:
+    - master
+  script:
+    - echo "CD для мастера"
+    - ssh eva=192.168.1.102 "cd C:/app && git pull origin master && mvn clean install"
+  when: manual
+
+# Запуск тестов по расписанию для develop-ветки
+scheduled_test:
+  stage: test
+  only:
+    - schedules
+  script:
+    - echo "Запуск тестов по расписанию"
+    - mvn test -Dbrowserstack.user=eva -Dbrowserstack.key=your_access_key
+  tags:
+    - scheduled
