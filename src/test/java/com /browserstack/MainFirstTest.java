@@ -12,7 +12,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.WebElement;
 
-public class FirstTest extends BrowserStackJUnitTest {
+public class MainFirstTest extends BrowserStackJUnitTest {
 
   @Test
   public void test() throws Exception {
